@@ -109,6 +109,21 @@ public class TourGuideService : ITourGuideService
         AppDomain.CurrentDomain.ProcessExit += (sender, e) => Tracker.StopTracking();
     }
 
+    public List<Attraction> GetAllAttractions()
+    {
+        return _gpsUtil.GetAttractions();
+    }
+
+    public double GetDistance(Locations loc1, Locations loc2)
+    {
+        return _rewardsService.GetDistance(loc1, loc2);
+    }
+
+    public int GetRewardPoints(Attraction attraction, User user)
+    {
+        return _rewardsService.GetRewardPoints(attraction, user);
+    }
+
     /**********************************************************************************
     * 
     * Methods Below: For Internal Testing
