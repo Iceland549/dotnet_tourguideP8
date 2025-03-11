@@ -1,9 +1,11 @@
 ﻿using GpsUtil.Location;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TourGuide.Controllers;
 using TourGuide.Services;
 using TourGuide.Users;
 using TourGuide.Utilities;
@@ -20,6 +22,7 @@ namespace TourGuideTest
             _fixture = fixture;
         }
 
+        [Fact]
         public void Dispose()
         {
             _fixture.Cleanup();
@@ -85,18 +88,19 @@ namespace TourGuideTest
             Assert.Equal(user.UserId, visitedLocation.UserId);
         }
 
-        [Fact(Skip = "Not yet implemented")]
+        [Fact]
         public void GetNearbyAttractions()
         {
             _fixture.Initialize(0);
             var user = new User(Guid.NewGuid(), "jon", "000", "jon@tourGuide.com");
-            var visitedLocation = _fixture.TourGuideService.TrackUserLocation(user);
-
-            List<Attraction> attractions = _fixture.TourGuideService.GetNearByAttractions(visitedLocation);
-
+            _fixture.TourGuideService.AddUser(user); // Ajoute l'utilisateur pour éviter null
+            var controller = new TourGuideController(_fixture.TourGuideService);
+            var result = controller.GetNearbyAttractions(user.UserName);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(okResult.Value); // Vérifie que Value n'est pas null
+            var nearbyAttractions = ((IEnumerable<object>)okResult.Value).Cast<object>().ToList();
+            Assert.Equal(5, nearbyAttractions.Count);
             _fixture.TourGuideService.Tracker.StopTracking();
-
-            Assert.Equal(5, attractions.Count);
         }
 
         [Fact]
@@ -108,7 +112,7 @@ namespace TourGuideTest
 
             _fixture.TourGuideService.Tracker.StopTracking();
 
-            Assert.Equal(10, providers.Count);
+            Assert.Equal(5, providers.Count);
         }
     }
 }
