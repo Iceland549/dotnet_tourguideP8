@@ -52,7 +52,8 @@ public class TourGuideController : ControllerBase
             })
             .OrderBy(x => x.distanceInMiles)
             .Take(5)
-            .ToList(); return Ok(attractions);
+            .ToList(); 
+        return Ok(attractions);
     }
 
     [HttpGet("getRewards")]
