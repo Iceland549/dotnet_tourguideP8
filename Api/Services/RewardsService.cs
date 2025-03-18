@@ -35,9 +35,11 @@ public class RewardsService : IRewardsService
     public void CalculateRewards(User user)
     {
         count++;
+        user.UserRewards.Clear();
         List<VisitedLocation> userLocations = user.VisitedLocations.ToList();
         List<Attraction> attractions = _gpsUtil.GetAttractions();
         var rewardsCopy = new List<UserReward>(user.UserRewards);
+        //var rewardsCopy = user.UserRewards;
         foreach (var visitedLocation in userLocations)
         {
             foreach (var attraction in attractions)
@@ -46,7 +48,9 @@ public class RewardsService : IRewardsService
                 {
                     if (NearAttraction(visitedLocation, attraction))
                     {
-                        user.AddUserReward(new UserReward(visitedLocation, attraction, GetRewardPoints(attraction, user)));
+                        var reward = new UserReward(visitedLocation, attraction, GetRewardPoints(attraction, user));
+                        user.AddUserReward(reward);
+                        rewardsCopy.Add(reward);
                     }
                 }
             }
