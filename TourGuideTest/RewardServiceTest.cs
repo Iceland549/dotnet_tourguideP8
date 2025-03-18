@@ -38,16 +38,16 @@ public class RewardServiceTest : IClassFixture<DependencyFixture>
         Assert.True(_fixture.RewardsService.IsWithinAttractionProximity(attraction, attraction));
     }
 
-    [Fact(Skip = ("Needs fixed - can throw InvalidOperationException"))]
+    [Fact]
     public void NearAllAttractions()
     {
         _fixture.Initialize(1);
         _fixture.RewardsService.SetProximityBuffer(int.MaxValue);
 
         var user = _fixture.TourGuideService.GetAllUsers().First();
+        _fixture.TourGuideService.Tracker.StopTracking();
         _fixture.RewardsService.CalculateRewards(user);
         var userRewards = _fixture.TourGuideService.GetUserRewards(user);
-        _fixture.TourGuideService.Tracker.StopTracking();
 
         Assert.Equal(_fixture.GpsUtil.GetAttractions().Count, userRewards.Count);
     }
