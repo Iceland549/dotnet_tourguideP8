@@ -9,10 +9,10 @@ namespace RewardCentral;
 
 public class RewardCentral
 {
-    public int GetAttractionRewardPoints(Guid attractionId, Guid userId)
+    public async Task<int> GetAttractionRewardPointsAsync(Guid attractionId, Guid userId)
     {
-        int randomDelay = new Random().Next(1, 1000);
-        Thread.Sleep(randomDelay);
+        int randomDelay = new Random().Next(1, 10);
+        await Task.Delay(randomDelay);
 
         int randomInt = new Random().Next(1, 1000);
         return randomInt;
