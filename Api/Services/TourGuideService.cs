@@ -49,9 +49,9 @@ public class TourGuideService : ITourGuideService
         return user.UserRewards;
     }
 
-    public VisitedLocation GetUserLocation(User user)
+    public async Task<VisitedLocation> GetUserLocationAsync(User user)
     {
-        return user.VisitedLocations.Any() ? user.GetLastVisitedLocation() : TrackUserLocation(user);
+        return user.VisitedLocations.Any() ? user.GetLastVisitedLocation() : await TrackUserLocationAsync(user);
     }
 
     public User GetUser(string userName)
@@ -82,18 +82,18 @@ public class TourGuideService : ITourGuideService
         return providers;
     }
 
-    public VisitedLocation TrackUserLocation(User user)
+    public async Task<VisitedLocation> TrackUserLocationAsync(User user)
     {
-        VisitedLocation visitedLocation = _gpsUtil.GetUserLocation(user.UserId);
+        VisitedLocation visitedLocation = await _gpsUtil.GetUserLocationAsync(user.UserId);
         user.AddToVisitedLocations(visitedLocation);
-        _rewardsService.CalculateRewards(user);
+        await _rewardsService.CalculateRewardsAsync(user);
         return visitedLocation;
     }
 
-    public List<Attraction> GetNearByAttractions(VisitedLocation visitedLocation)
+    public async Task<List<Attraction>> GetNearByAttractionsAsync(VisitedLocation visitedLocation)
     {
         List<Attraction> nearbyAttractions = new ();
-        foreach (var attraction in _gpsUtil.GetAttractions())
+        foreach (var attraction in await _gpsUtil.GetAttractionsAsync())
         {
             if (_rewardsService.IsWithinAttractionProximity(attraction, visitedLocation.Location))
             {
@@ -109,9 +109,9 @@ public class TourGuideService : ITourGuideService
         AppDomain.CurrentDomain.ProcessExit += (sender, e) => Tracker.StopTracking();
     }
 
-    public List<Attraction> GetAllAttractions()
+    public async Task<List<Attraction>> GetAllAttractionsAsync()
     {
-        return _gpsUtil.GetAttractions();
+        return await _gpsUtil.GetAttractionsAsync();
     }
 
     public double GetDistance(Locations loc1, Locations loc2)
@@ -119,9 +119,9 @@ public class TourGuideService : ITourGuideService
         return _rewardsService.GetDistance(loc1, loc2);
     }
 
-    public int GetRewardPoints(Attraction attraction, User user)
+    public async Task<int> GetRewardPointsAsync(Attraction attraction, User user)
     {
-        return _rewardsService.GetRewardPoints(attraction, user);
+        return await _rewardsService.GetRewardPointsAsync(attraction, user);
     }
 
     /**********************************************************************************
