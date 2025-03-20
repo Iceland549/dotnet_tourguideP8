@@ -29,11 +29,11 @@ namespace TourGuideTest
         }
 
         [Fact]
-        public void GetUserLocation()
+        public async Task GetUserLocationAsync()
         {
             _fixture.Initialize(0);
             var user = new User(Guid.NewGuid(), "jon", "000", "jon@tourGuide.com");
-            var visitedLocation = _fixture.TourGuideService.TrackUserLocation(user);
+            var visitedLocation = await _fixture.TourGuideService.TrackUserLocationAsync(user);
             _fixture.TourGuideService.Tracker.StopTracking();
 
             Assert.Equal(user.UserId, visitedLocation.UserId);
@@ -77,11 +77,11 @@ namespace TourGuideTest
         }
 
         [Fact]
-        public void TrackUser()
+        public async Task TrackUserAsync()
         {
             _fixture.Initialize();
             var user = new User(Guid.NewGuid(), "jon", "000", "jon@tourGuide.com");
-            var visitedLocation = _fixture.TourGuideService.TrackUserLocation(user);
+            var visitedLocation = await _fixture.TourGuideService.TrackUserLocationAsync(user);
 
             _fixture.TourGuideService.Tracker.StopTracking();
 
@@ -89,13 +89,13 @@ namespace TourGuideTest
         }
 
         [Fact]
-        public void GetNearbyAttractions()
+        public async Task GetNearbyAttractionsAsync()
         {
             _fixture.Initialize(0);
             var user = new User(Guid.NewGuid(), "jon", "000", "jon@tourGuide.com");
             _fixture.TourGuideService.AddUser(user);
             var controller = new TourGuideController(_fixture.TourGuideService);
-            var result = controller.GetNearbyAttractions(user.UserName);
+            var result = await controller.GetNearbyAttractionsAsync(user.UserName);
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.NotNull(okResult.Value);
             var nearbyAttractions = ((IEnumerable<object>)okResult.Value).Cast<object>().ToList();
