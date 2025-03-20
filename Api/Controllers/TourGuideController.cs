@@ -18,9 +18,9 @@ public class TourGuideController : ControllerBase
     }
 
     [HttpGet("getLocation")]
-    public ActionResult<VisitedLocation> GetLocation([FromQuery] string userName)
+    public async Task<ActionResult<VisitedLocation>> GetLocationAsync([FromQuery] string userName)
     {
-        var location = _tourGuideService.GetUserLocation(GetUser(userName));
+        var location = await _tourGuideService.GetUserLocationAsync(GetUser(userName));
         return Ok(location);
     }
 
@@ -34,13 +34,14 @@ public class TourGuideController : ControllerBase
     // The reward points for visiting each Attraction.
     //    Note: Attraction reward points can be gathered from RewardsCentral
     [HttpGet("getNearbyAttractions")]
-    public ActionResult GetNearbyAttractions([FromQuery] string userName)
+    public async Task<ActionResult> GetNearbyAttractionsAsync([FromQuery] string userName)
     {
-        var visitedLocation = _tourGuideService.GetUserLocation(GetUser(userName));
+        var visitedLocation = await _tourGuideService.GetUserLocationAsync(GetUser(userName));
         var userLocation = visitedLocation.Location;
         var user = GetUser(userName);
-        var attractions = _tourGuideService.GetAllAttractions()
-            .Select(attraction => new
+        var allAttractions = await _tourGuideService.GetAllAttractionsAsync();
+        var attractionsTasks = allAttractions
+            .Select(async attraction => new
             {
                 attractionName = attraction.AttractionName,
                 attractionLatitude = attraction.Latitude,
@@ -48,8 +49,9 @@ public class TourGuideController : ControllerBase
                 userLatitude = userLocation.Latitude,
                 userLongitude = userLocation.Longitude,
                 distanceInMiles = _tourGuideService.GetDistance(userLocation, new Locations(attraction.Latitude, attraction.Longitude)),
-                rewardPoints = _tourGuideService.GetRewardPoints(attraction, user)
-            })
+                rewardPoints = await _tourGuideService.GetRewardPointsAsync(attraction, user)
+            });
+        var attractions = (await Task.WhenAll(attractionsTasks))
             .OrderBy(x => x.distanceInMiles)
             .Take(5)
             .ToList(); 
