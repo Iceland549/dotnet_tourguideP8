@@ -14,6 +14,7 @@ public class RewardsService : IRewardsService
     private readonly int _attractionProximityRange = 200;
     private readonly IGpsUtil _gpsUtil;
     private readonly IRewardCentral _rewardsCentral;
+    private readonly object _lock = new object();
     private static int count = 0;
 
     public RewardsService(IGpsUtil gpsUtil, IRewardCentral rewardCentral)
@@ -35,30 +36,31 @@ public class RewardsService : IRewardsService
 
     public async Task CalculateRewardsAsync(User user)
     {
-        count++;
+        Interlocked.Increment(ref count); 
         List<VisitedLocation> userLocations = user.VisitedLocations.ToList();
         List<Attraction> attractions = await _gpsUtil.GetAttractionsAsync();
         var tempRewards = new ConcurrentBag<UserReward>();
+
         await Task.WhenAll(userLocations.Select(async visitedLocation =>
         {
-            foreach (var attraction in attractions)
+            await Task.WhenAll(attractions.Select(async attraction => 
             {
-                if (!user.UserRewards.Any(r => r.Attraction.AttractionName == attraction.AttractionName))
+                if (NearAttraction(visitedLocation, attraction))
                 {
-                    if (NearAttraction(visitedLocation, attraction))
-                    {
-                        int points = await GetRewardPointsAsync(attraction, user);
-                        tempRewards.Add(new UserReward(visitedLocation, attraction, points));
-                    }
+                    int points = await GetRewardPointsAsync(attraction, user);
+                    tempRewards.Add(new UserReward(visitedLocation, attraction, points));
                 }
-            }
+            }));
         }));
 
-        lock (user)
+        lock (_lock) 
         {
             foreach (var reward in tempRewards)
             {
-                user.AddUserReward(reward);
+                if (!user.UserRewards.Any(r => r.Attraction.AttractionName == reward.Attraction.AttractionName)) // Correction a : Vérification dans le lock
+                {
+                    user.AddUserReward(reward);
+                }
             }
         }
     }
