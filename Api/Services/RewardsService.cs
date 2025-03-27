@@ -57,7 +57,7 @@ public class RewardsService : IRewardsService
         {
             foreach (var reward in tempRewards)
             {
-                if (!user.UserRewards.Any(r => r.Attraction.AttractionName == reward.Attraction.AttractionName)) // Correction a : Vérification dans le lock
+                if (!user.UserRewards.Any(r => r.Attraction.AttractionName == reward.Attraction.AttractionName)) 
                 {
                     user.AddUserReward(reward);
                 }
