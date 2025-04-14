@@ -60,22 +60,21 @@ jobs:
                 retention-days: 7
 
             - name: Publish Application
-              run: |
-                dotnet publish Api/TourGuide.csproj -c Release -o ./publish
+              run: dotnet publish Api/TourGuide.csproj -c Release -o ./publish
               if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
             - name: Create ZIP Archive (Ubuntu)
-              run: zip -r tourguide-async-${{ github.sha }}.zip ./publish
+              run: zip -r tourguide-async-${{ github.sha }}-${{ matrix.os }}.zip ./publish
               if: matrix.os == 'ubuntu-latest' && github.event_name == 'push' && github.ref == 'refs/heads/master'
 
             - name: Create ZIP Archive (Windows)
-              run: powershell Compress-Archive -Path ./publish/* -DestinationPath tourguide-async-${{ github.sha }}.zip
+              run: powershell Compress-Archive -Path ./publish/* -DestinationPath tourguide-async-${{ github.sha }}-${{ matrix.os }}.zip
               if: matrix.os == 'Windows-latest' && github.event_name == 'push' && github.ref == 'refs/heads/master'
 
             - name: Upload Publish Artifact
               uses: actions/upload-artifact@v4
               if: github.event_name == 'push' && github.ref == 'refs/heads/master'
               with:
-                name: tourguide-async-${{ github.sha }}
-                path: tourguide-async-${{ github.sha }}.zip
+                name: tourguide-async-${{ github.sha }}-${{ matrix.os }}
+                path: tourguide-async-${{ github.sha }}-${{ matrix.os }}.zip
                 retention-days: 7
