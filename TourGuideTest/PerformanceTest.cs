@@ -55,9 +55,13 @@ namespace TourGuideTest
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            var tasks = allUsers.Select(u => _fixture.TourGuideService.TrackUserLocationAsync(u)).ToArray();
-                await Task.WhenAll(tasks);
-            
+            var trackLocationTasks = allUsers.Select(async user =>
+            {
+                await _fixture.TourGuideService.TrackUserLocationAsync(user);
+            });
+
+            await Task.WhenAll(trackLocationTasks);
+
             stopWatch.Stop();
             _fixture.TourGuideService.Tracker.StopTracking();
 
@@ -70,24 +74,24 @@ namespace TourGuideTest
 
         public async Task HighVolumeGetRewardsAsync()
         {
-            //On peut ici augmenter le nombre d'utilisateurs pour tester les performances
-            _fixture.Initialize(100000);
+            //On peut ici augmenter le nombre d'utilisateurs pour tester les performances            _fixture.Initialize(100000);
 
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
             Attraction attraction = (await _fixture.GpsUtil.GetAttractionsAsync())[0];
             List<User> allUsers = _fixture.TourGuideService.GetAllUsers();
+            _output.WriteLine($"Nombre d'utilisateurs : {allUsers.Count}");
             allUsers.ForEach(u => u.AddToVisitedLocations(new VisitedLocation(u.UserId, attraction, DateTime.Now)));
 
-            foreach (var user in allUsers)
+            var rewardTasks = allUsers.Select(async user =>
             {
                 await _fixture.RewardsService.CalculateRewardsAsync(user);
-            }
-            foreach (var user in allUsers)
-            {
-                Assert.True(user.UserRewards.Count > 0);
-            }
+                Assert.True(user.UserRewards.Count > 0, $"User {user.UserName} has no rewards");
+            });
+
+            await Task.WhenAll(rewardTasks);
+
             stopWatch.Stop();
             _fixture.TourGuideService.Tracker.StopTracking();
 
