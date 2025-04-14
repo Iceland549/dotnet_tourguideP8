@@ -95,6 +95,7 @@ namespace TourGuideTest
             stopWatch.Stop();
             _fixture.TourGuideService.Tracker.StopTracking();
 
+
             _output.WriteLine($"highVolumeGetRewards: Time Elapsed: {stopWatch.Elapsed.TotalSeconds} seconds.");
             Assert.True(TimeSpan.FromMinutes(20).TotalSeconds >= stopWatch.Elapsed.TotalSeconds);
         }
