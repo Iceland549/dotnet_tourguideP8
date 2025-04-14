@@ -7,7 +7,7 @@ on:
         branches: [ master ]
 
 env:
-    DOTNET_VERSION: '7.0.x'
+    DOTNET_VERSION: '8.0.x'
     SOLUTION_FILE: 'TourGuide.sln'
 
 jobs:
@@ -40,7 +40,7 @@ jobs:
 
             - name: Run Tests
               run: |
-                dotnet test ${{ env.SOLUTION_FILE }} --no-build --configuration Release \
+                dotnet test "${{ env.SOLUTION_FILE }}" --no-build --configuration Release \
                     --verbosity detailed \
                     --logger "trx;LogFileName=test-results.trx" \
                     --collect:"XPlat Code Coverage"
@@ -66,11 +66,11 @@ jobs:
               run: |
                 dotnet publish Api/TourGuide.csproj -c Release -o ./publish
                 zip -r tourguide-async-${{ github.sha }}.zip ./publish
-              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+              if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
             - name: Upload Publish Artifact
               uses: actions/upload-artifact@v4
-              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+              if: github.event_name == 'push' && github.ref == 'refs/heads/master'
               with:
                 name: tourguide-async-${{ github.sha }}
                 path: tourguide-async-${{ github.sha }}.zip
