@@ -39,11 +39,8 @@ jobs:
               timeout-minutes: 10
 
             - name: Run Tests
-              run: |
-                dotnet test "${{ env.SOLUTION_FILE }}" --no-build --configuration Release `
-                    --verbosity detailed `
-                    --logger "trx;LogFileName=test-results.trx" `
-                    --collect:"XPlat Code Coverage"
+              run: dotnet test "${{ env.SOLUTION_FILE }}" --no-build --configuration Release --verbosity detailed --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
+
               timeout-minutes: 20
 
             - name: Generate Coverage Report
