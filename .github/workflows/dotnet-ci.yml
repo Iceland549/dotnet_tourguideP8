@@ -62,8 +62,15 @@ jobs:
             - name: Publish Application
               run: |
                 dotnet publish Api/TourGuide.csproj -c Release -o ./publish
-                zip -r tourguide-async-${{ github.sha }}.zip ./publish
               if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+            - name: Create ZIP Archive (Ubuntu)
+              run: zip -r tourguide-async-${{ github.sha }}.zip ./publish
+              if: matrix.os == 'ubuntu-latest' && github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+            - name: Create ZIP Archive (Windows)
+              run: powershell Compress-Archive -Path ./publish/* -DestinationPath tourguide-async-${{ github.sha }}.zip
+              if: matrix.os == 'Windows-latest' && github.event_name == 'push' && github.ref == 'refs/heads/master'
 
             - name: Upload Publish Artifact
               uses: actions/upload-artifact@v4
