@@ -36,26 +36,10 @@ public class TourGuideController : ControllerBase
     [HttpGet("getNearbyAttractions")]
     public async Task<ActionResult> GetNearbyAttractionsAsync([FromQuery] string userName)
     {
-        var visitedLocation = await _tourGuideService.GetUserLocationAsync(GetUser(userName));
-        var userLocation = visitedLocation.Location;
         var user = GetUser(userName);
-        var allAttractions = await _tourGuideService.GetAllAttractionsAsync();
-        var attractionsTasks = allAttractions
-            .Select(async attraction => new
-            {
-                attractionName = attraction.AttractionName,
-                attractionLatitude = attraction.Latitude,
-                attractionLongitude = attraction.Longitude,
-                userLatitude = userLocation.Latitude,
-                userLongitude = userLocation.Longitude,
-                distanceInMiles = _tourGuideService.GetDistance(userLocation, new Locations(attraction.Latitude, attraction.Longitude)),
-                rewardPoints = await _tourGuideService.GetRewardPointsAsync(attraction, user)
-            });
-        var attractions = (await Task.WhenAll(attractionsTasks))
-            .OrderBy(x => x.distanceInMiles)
-            .Take(5)
-            .ToList(); 
-        return Ok(attractions);
+        var visitedLocation = await _tourGuideService.GetUserLocationAsync(user);
+        var nearbyAttractions = await _tourGuideService.GetNearByAttractionsAsync(visitedLocation, user);
+        return Ok(nearbyAttractions);
     }
 
     [HttpGet("getRewards")]

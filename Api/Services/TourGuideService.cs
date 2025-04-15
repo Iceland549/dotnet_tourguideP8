@@ -1,5 +1,6 @@
 ﻿using GpsUtil.Location;
 using Microsoft.Extensions.Logging;
+using RewardCentral;
 using System.Diagnostics;
 using System.Globalization;
 using TourGuide.LibrairiesWrappers.Interfaces;
@@ -54,7 +55,7 @@ public class TourGuideService : ITourGuideService
         return user.VisitedLocations.Any() ? user.GetLastVisitedLocation() : await TrackUserLocationAsync(user);
     }
 
-    public User GetUser(string userName)
+    public User? GetUser(string userName)
     {
         return _internalUserMap.ContainsKey(userName) ? _internalUserMap[userName] : null;
     }
@@ -90,18 +91,30 @@ public class TourGuideService : ITourGuideService
         return visitedLocation;
     }
 
-    public async Task<List<Attraction>> GetNearByAttractionsAsync(VisitedLocation visitedLocation)
+    public async Task<List<object>> GetNearByAttractionsAsync(VisitedLocation visitedLocation, User user)
     {
-        List<Attraction> nearbyAttractions = new ();
-        foreach (var attraction in await _gpsUtil.GetAttractionsAsync())
-        {
-            if (_rewardsService.IsWithinAttractionProximity(attraction, visitedLocation.Location))
-            {
-                nearbyAttractions.Add(attraction);
-            }
-        }
+        var userLocation = visitedLocation.Location;
+        var allAttractions = await _gpsUtil.GetAttractionsAsync();
 
-        return nearbyAttractions;
+        var nearbyAttractionsTasks = allAttractions
+            .Select(async attraction => new
+            {
+                attractionName = attraction.AttractionName,
+                attractionLatitude = attraction.Latitude,
+                attractionLongitude = attraction.Longitude,
+                userLatitude = userLocation.Latitude,
+                userLongitude = userLocation.Longitude,
+
+                distanceInMiles = _rewardsService.GetDistance(userLocation, new Locations(attraction.Latitude, attraction.Longitude)),
+                rewardPoints = await _rewardsService.GetRewardPointsAsync(attraction, user)
+            });
+
+        var nearbyAttractions = (await Task.WhenAll(nearbyAttractionsTasks))
+            .OrderBy(x => x.distanceInMiles)
+            .Take(5)
+            .ToList();
+
+        return nearbyAttractions.Cast<object>().ToList();
     }
 
     private void AddShutDownHook()
