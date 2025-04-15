@@ -36,28 +36,32 @@ public class RewardsService : IRewardsService
 
     public async Task CalculateRewardsAsync(User user)
     {
-        Interlocked.Increment(ref count); 
+        Interlocked.Increment(ref count);
         List<VisitedLocation> userLocations = user.VisitedLocations.ToList();
         List<Attraction> attractions = await _gpsUtil.GetAttractionsAsync();
         var tempRewards = new ConcurrentBag<UserReward>();
 
-        await Task.WhenAll(userLocations.Select(async visitedLocation =>
+        var locationTasks = userLocations.Select(async visitedLocation =>
         {
-            await Task.WhenAll(attractions.Select(async attraction => 
+            var attractionTasks = attractions.Select(async attraction =>
             {
                 if (NearAttraction(visitedLocation, attraction))
                 {
                     int points = await GetRewardPointsAsync(attraction, user);
                     tempRewards.Add(new UserReward(visitedLocation, attraction, points));
                 }
-            }));
-        }));
+            }).ToList();
 
-        lock (_lock) 
+            await Task.WhenAll(attractionTasks);
+        }).ToList();
+
+        await Task.WhenAll(locationTasks);
+
+        lock (_lock)
         {
             foreach (var reward in tempRewards)
             {
-                if (!user.UserRewards.Any(r => r.Attraction.AttractionName == reward.Attraction.AttractionName)) 
+                if (!user.UserRewards.Any(r => r.Attraction.AttractionName == reward.Attraction.AttractionName))
                 {
                     user.AddUserReward(reward);
                 }
