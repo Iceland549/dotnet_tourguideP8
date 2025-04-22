@@ -14,7 +14,6 @@ public class RewardsService : IRewardsService
     private readonly int _attractionProximityRange = 200;
     private readonly IGpsUtil _gpsUtil;
     private readonly IRewardCentral _rewardsCentral;
-    private readonly object _lock = new object();
     private static int count = 0;
 
     public RewardsService(IGpsUtil gpsUtil, IRewardCentral rewardCentral)
@@ -57,8 +56,7 @@ public class RewardsService : IRewardsService
 
         await Task.WhenAll(locationTasks);
 
-        lock (_lock)
-        {
+
             foreach (var reward in tempRewards)
             {
                 if (!user.UserRewards.Any(r => r.Attraction.AttractionName == reward.Attraction.AttractionName))
@@ -66,7 +64,6 @@ public class RewardsService : IRewardsService
                     user.AddUserReward(reward);
                 }
             }
-        }
     }
 
     public bool IsWithinAttractionProximity(Attraction attraction, Locations location)
