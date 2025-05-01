@@ -12,6 +12,7 @@ namespace TourGuide.Services.Interfaces
         void AddUser(User user);
         List<User> GetAllUsers();
         Task<List<object>> GetNearByAttractionsAsync(VisitedLocation visitedLocation, User user);
+        Task<List<object>> GetRewardAttractionAsync(VisitedLocation visitedLocation, User user);
         List<Provider> GetTripDeals(User user);
         User? GetUser(string userName);
         Task<VisitedLocation> GetUserLocationAsync(User user);

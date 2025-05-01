@@ -112,10 +112,52 @@ public class TourGuideService : ITourGuideService
         var nearbyAttractions = (await Task.WhenAll(nearbyAttractionsTasks))
             .OrderBy(x => x.distanceInMiles)
             .Take(5)
+            .Cast<object>()
             .ToList();
 
-        return nearbyAttractions.Cast<object>().ToList();
+        return nearbyAttractions;
     }
+
+    public async Task<List<object>> GetRewardAttractionAsync(VisitedLocation visitedLocation, User user)
+    {
+        var userLocation = visitedLocation.Location;
+        var allAttractions = await _gpsUtil.GetAttractionsAsync();
+
+        var rewardAttractionTasks = allAttractions
+            .Select(async attraction => new
+            {
+                visitedLocation = new
+                {
+                    userId = visitedLocation.UserId,
+                    location = new
+                    {
+                        longitude = userLocation.Longitude,
+                        latitude = userLocation.Latitude
+                    },
+                    timeVisited = visitedLocation.TimeVisited
+                },
+                attraction = new
+                {
+                    longitude = attraction.Longitude,
+                    latitude = attraction.Latitude,
+                    attractionName = attraction.AttractionName,
+                    city = attraction.City,
+                    state = attraction.State,
+                    attractionId = attraction.AttractionId
+                },
+                distanceInMiles = _rewardsService.GetDistance(userLocation, new Locations(attraction.Latitude, attraction.Longitude)),
+                rewardPoints = await _rewardsService.GetRewardPointsAsync(attraction, user)
+            });
+
+        var closestAttraction = (await Task.WhenAll(rewardAttractionTasks))
+            .OrderBy(x => x.distanceInMiles)
+            .Take(1)
+            .Cast<object>()
+            .ToList();
+
+        return closestAttraction;
+    }
+
 
     private void AddShutDownHook()
     {

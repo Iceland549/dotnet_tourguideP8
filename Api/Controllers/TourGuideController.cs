@@ -43,11 +43,14 @@ public class TourGuideController : ControllerBase
     }
 
     [HttpGet("getRewards")]
-    public ActionResult<List<UserReward>> GetRewards([FromQuery] string userName)
+    public async Task<ActionResult<List<object>>> GetRewards([FromQuery] string userName)
     {
-        var rewards = _tourGuideService.GetUserRewards(GetUser(userName));
-        return Ok(rewards);
+        var user = GetUser(userName);
+        var visitedLocation = await _tourGuideService.GetUserLocationAsync(user);
+        var closestAttraction = await _tourGuideService.GetRewardAttractionAsync(visitedLocation, user);
+        return Ok(closestAttraction);
     }
+
 
     [HttpGet("getTripDeals")]
     public ActionResult<List<Provider>> GetTripDeals([FromQuery] string userName)
